@@ -3,10 +3,53 @@ var
 	ROWS = 15,
 	COLS = 16,
 	COLORS = [ 'red', 'green', 'yellow', 'blue', 'white' ],
-	
+
 	TW,
 	TH,
 	GRAVITY,
+
+	Explosion = j5g3.Clip.extend({
+
+		count: 10,
+		radius: 20,
+		duration: 10,
+
+		stroke: '#eee',
+
+		setup: function()
+		{
+		var
+			i, angle = 0, dot, rnd,
+			inc = 2 * Math.PI / this.count,
+
+			on_remove = function()
+			{
+				if (this.parent.parent)
+					this.parent.remove();
+			}
+		;
+			for (i=0; i<this.count; i++)
+			{
+				dot = j5g3.dot(5);
+				dot.stroke = '#eee';
+				rnd = j5g3.rand(this.radius);
+				this.add([ dot, j5g3.tween({
+					target: dot,
+					duration: this.duration,
+					auto_remove: true,
+					to: {
+						x: rnd*Math.cos(angle),
+						y: rnd*Math.sin(angle),
+						alpha: 0
+					},
+					on_remove: on_remove
+				}) ]);
+
+				angle += inc;
+			}
+		}
+
+	}),
 
 	Bubble = j5g3.Circle.extend({
 
@@ -18,7 +61,7 @@ var
 		{
 			j5g3.Circle.apply(this, [ p ]);
 
-			this.radius = (TW>TH ? TH : TW)/2 - 2; 
+			this.radius = (TW>TH ? TH : TW)/2 - 2;
 			this.fill = COLORS[j5g3.irand(COLORS.length)];
 		},
 
@@ -55,7 +98,7 @@ var
 
 			if (!sprite)
 				return;
-				
+
 			if (this.selected.indexOf(sprite) !== -1)
 				this.pop();
 			else
@@ -64,7 +107,7 @@ var
 				this.do_select(x, y);
 			}
 		},
-		
+
 		do_select: function(x, y)
 		{
 		var
@@ -92,6 +135,8 @@ var
 			row, b
 		;
 			bubble.remove();
+			this.add(new Explosion({ x: bubble.x, y: bubble.y }));
+
 			for (row = bubble.boardY; row>0; row--)
 			{
 				if ((b = this.map[row-1][col]))
@@ -99,12 +144,12 @@ var
 					b.gravityY += TH;
 					b.boardY += 1;
 				}
-				this.map[row][col] = this.map[row-1][col]; 
+				this.map[row][col] = this.map[row-1][col];
 			}
 
 			this.map[0][col] = null;
 		},
-		
+
 		getPoints: function(n)
 		{
 			return Math.pow(n, 2);
@@ -119,7 +164,7 @@ var
 				for (y=0; y<ROWS; y++)
 				{
 					bubble = this.map[y][x-1];
-					
+
 					this.map[y][x] = bubble;
 					if (bubble)
 					{
@@ -137,7 +182,7 @@ var
 			main: for (x=1; x<COLS; x++)
 			{
 				for (y=0; y<ROWS; y++)
-					if (this.map[y][x]) 
+					if (this.map[y][x])
 						continue main;
 				this.removeColumn(x);
 			}
@@ -157,7 +202,7 @@ var
 		reset: function()
 		{
 			for (i=0; i<this.selected.length; i++)
-				this.selected[i].stroke = null; 
+				this.selected[i].stroke = null;
 
 			this.selected = [];
 		},
@@ -180,10 +225,10 @@ var
 			for (i=2; i<ROWS; i++)
 			{
 				for (a=0; a<COLS; a++)
-					this.map[i][a] = new Bubble({ 
+					this.map[i][a] = new Bubble({
 						boardX: a,
 						boardY: i,
-						x: TW/2 + a*TW, 
+						x: TW/2 + a*TW,
 						y: TH/2 + i*TH
 					});
 				this.add(this.map[i]);
@@ -212,7 +257,7 @@ var
 			TW = this.stage.width / COLS;
 			TH = this.stage.height / ROWS;
 			GRAVITY = TH / 4;
-			
+
 			mouse.buttonY = this.onMouseMove.bind(this);
 			mouse.buttonA = mouse.buttonB = mouse.buttonX = this.onClick.bind(this);
 
@@ -220,7 +265,7 @@ var
 
 			this.stage.add(this.board);
 			this.fps(32);
-			
+
 			this.run();
 		}
 
