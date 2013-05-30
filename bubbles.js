@@ -2,7 +2,12 @@
 var
 	ROWS = 15,
 	COLS = 16,
-	COLORS = [ 'red', 'green', 'yellow', 'blue', 'white' ],
+	ST = 0.2, // How fast bubbles move
+	COLORS = [],
+
+	SPRITE_MASK,
+	game,
+//	[ 'red', 'green', 'yellow', 'blue', 'white' ],
 
 	TW,
 	TH,
@@ -12,7 +17,8 @@ var
 
 	assets = {
 		bubble_fx: loader.audio('bubble.ogg'),
-		pop: loader.audio('bubble2.ogg')
+		pop: loader.audio('bubble2.ogg'),
+		sprites: loader.img('bubbles.png')
 	},
 
 	Explosion = j5g3.Clip.extend({
@@ -64,21 +70,51 @@ var
 
 	}),
 
-	Bubble = j5g3.Circle.extend({
+	Bubble = j5g3.Clip.extend({
 
 		line_width: 3,
 		gravityY: 0,
 		gravityX: 0,
+		width: 32, height: 32,
+		bubble: null,
+		selected: false,
 
-		init: function Bubble(p)
+		setup: function()
 		{
-			j5g3.Circle.apply(this, [ p ]);
+		var
+			fill = this.fill = j5g3.irand(COLORS.length),
+			sprites = COLORS[fill],
+			i,
+			clip = this.bubble = j5g3.clip()
+		;
+			clip.remove_frame();
+			clip.st = ST;
 
-			this.radius = (TW>TH ? TH : TW)/2 - 2;
-			this.fill = COLORS[j5g3.irand(COLORS.length)];
+			for (i=0; i<sprites.length; i++)
+				clip.add_frame(game.spritesheet.sprite(sprites[i]));
+
+			this.add(clip);
+
+			this.mask = game.spritesheet.sprite(SPRITE_MASK);
+			this.mask.stretch(42,42).pos(-4,-4);
+
+			this.cx = this.cy = -16;
+			this.sx = this.sy = 0.8;
 		},
 
-		update: function()
+		select: function()
+		{
+			this.selected = true;
+			this.add(this.mask);
+		},
+
+		deselect: function()
+		{
+			this.selected =false;
+			this.mask.remove();
+		},
+
+		update_frame: function()
 		{
 			if (this.gravityY>0)
 			{
@@ -93,6 +129,11 @@ var
 				this.x += GRAVITY;
 			} else
 				this.gravityX = 0;
+		},
+
+		pop: function()
+		{
+			this.remove();
 		}
 	}),
 
@@ -103,7 +144,7 @@ var
 
 		compare: function(s, x, y)
 		{
-			return this.map[y][x] && !this.map[y][x].stroke && s.fill === this.map[y][x].fill;
+			return this.map[y][x] && !this.map[y][x].selected && s.fill === this.map[y][x].fill;
 		},
 
 		select: function(x, y, sprite)
@@ -130,7 +171,7 @@ var
 		var
 			sprite = this.map[y][x]
 		;
-			sprite.stroke = '#eee';
+			sprite.select();
 			this.selected.push(sprite);
 
 			if (y > 0 && this.compare(sprite, x, y-1))
@@ -230,7 +271,7 @@ var
 		reset: function()
 		{
 			for (i=0; i<this.selected.length; i++)
-				this.selected[i].stroke = null;
+				this.selected[i].deselect();
 
 			this.selected = [];
 		},
@@ -277,6 +318,38 @@ var
 			this.board.pop();
 		},
 
+		initColor: function(x,y)
+		{
+		var
+			w=32, sprites=[],
+			xl = x + w * 4,
+			yl = y + w * 3
+		;
+			for (; x<xl; x+=w)
+				for (; y<yl; y+=w)
+					sprites.push(this.spritesheet.slice(x,y,w,w));
+
+			COLORS.push(sprites);
+		},
+
+		initSpritesheet: function()
+		{
+			this.spritesheet = j5g3.spritesheet(assets.sprites);
+			this.initColor(0, 0);
+			this.initColor(0, 103);
+			this.initColor(0, 206);
+			this.initColor(0, 412);
+			this.initColor(0, 515);
+
+			SPRITE_MASK = this.spritesheet.slice(206,368,46,46);
+		},
+
+		start: function()
+		{
+			this.board = new Board();
+			this.stage.add(this.board);
+		},
+
 		startFn: function()
 		{
 		var
@@ -289,9 +362,7 @@ var
 			mouse.buttonY = this.onMouseMove.bind(this);
 			mouse.buttonA = mouse.buttonB = mouse.buttonX = this.onClick.bind(this);
 
-			this.board = new Board();
-
-			this.stage.add(this.board);
+			this.initSpritesheet();
 			this.fps(32);
 
 			this.run();
@@ -301,6 +372,7 @@ var
 ;
 	loader.ready(function() {
 		game = new Game();
+		game.start();
 	});
 
 })(this.j5g3);
