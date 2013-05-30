@@ -270,6 +270,7 @@ var
 				this._popd = 0;
 				this.selected.forEach(this.popBubble.bind(this));
 				this.score.text = parseInt(this.score.text, 10) + this.getPoints(this.selected.length);
+				this.score.center();
 				this.score.invalidate();
 				this.checkColumns();
 				this.selected = [];
@@ -292,8 +293,17 @@ var
 			j5g3.Clip.apply(this, [p]);
 
 			this.map = j5g3.ary(COLS, ROWS, 0);
-			this.points = j5g3.text({ text: '0', font: '18px Arial', fill: 'white', x: 550, y: 22 });
-			this.score = j5g3.text({ text: '0', font: '30px Arial', fill: 'yellow', x: 300, y: 36 });
+			this.points = j5g3.text({
+				text: '0', font: '18px Arial',
+				fill: 'white', x: 550, y: 12,
+				width: 100, height: 30
+			});
+			this.score = j5g3.text({
+				text: '0', font: '30px Arial',
+				fill: 'yellow', x: 300, y: 16,
+				width: 100, height: 30,
+				align: 'center'
+			});
 
 			game.background.add([this.points, this.score]);
 			game.background.invalidate();
