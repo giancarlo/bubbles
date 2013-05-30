@@ -18,7 +18,8 @@ var
 	assets = {
 		bubble_fx: loader.audio('bubble.ogg'),
 		pop: loader.audio('bubble2.ogg'),
-		sprites: loader.img('bubbles.png')
+		sprites: loader.img('bubbles.png'),
+		background: loader.img('stars.jpg')
 	},
 
 	Explosion = j5g3.Clip.extend({
@@ -26,9 +27,6 @@ var
 		count: 10,
 		radius: 30,
 		duration: 10,
-
-		stroke: '#eee',
-		fill: 'transparent',
 
 		setup: function()
 		{
@@ -40,11 +38,16 @@ var
 			{
 				if (this.parent.parent)
 					this.parent.remove();
-			}
+			},
+
+			sprites = COLORS[this.bubble.fill]
 		;
+			this.x = this.bubble.x-5;
+			this.y = this.bubble.y-5;
+
 			for (i=0; i<this.count; i++)
 			{
-				dot = j5g3.circle({ radius: 5 });
+				dot = game.spritesheet.sprite(sprites[i]).scale(0.6,0.6);
 				rnd = j5g3.rand(this.radius);
 
 				this.add([ dot, j5g3.tween({
@@ -163,6 +166,11 @@ var
 			{
 				this.reset();
 				this.do_select(x, y);
+
+				assets.bubble_fx.play();
+
+				this.points.text = this.getPoints(this.selected.length);
+				this.points.invalidate();
 			}
 		},
 
@@ -183,8 +191,6 @@ var
 			if (x > 0 && this.compare(sprite, x-1, y))
 				this.do_select(x-1, y);
 
-			this.points.text = this.getPoints(this.selected.length);
-			assets.bubble_fx.play();
 		},
 
 		popBubble: function(bubble)
@@ -193,8 +199,8 @@ var
 			col = bubble.boardX,
 			row, b
 		;
-			bubble.remove();
-			this.add(new Explosion({ x: bubble.x, y: bubble.y, stroke: bubble.fill }));
+			bubble.pop();
+			this.add(new Explosion({ bubble: bubble }));
 
 			for (row = bubble.boardY; row>0; row--)
 			{
@@ -263,6 +269,7 @@ var
 				this._popd = 0;
 				this.selected.forEach(this.popBubble.bind(this));
 				this.score.text = parseInt(this.score.text, 10) + this.getPoints(this.selected.length);
+				this.score.invalidate();
 				this.checkColumns();
 				this.selected = [];
 			}
@@ -287,9 +294,10 @@ var
 			this.points = j5g3.text({ text: '0', font: '18px Arial', fill: 'white', x: 550, y: 22 });
 			this.score = j5g3.text({ text: '0', font: '30px Arial', fill: 'yellow', x: 300, y: 36 });
 
-			this.selected = [];
+			game.background.add([this.points, this.score]);
+			game.background.invalidate();
 
-			this.add([ this.points, this.score ]);
+			this.selected = [];
 
 			for (i=2; i<ROWS; i++)
 			{
@@ -318,15 +326,16 @@ var
 			this.board.pop();
 		},
 
-		initColor: function(x,y)
+		initColor: function(xi,y)
 		{
 		var
 			w=32, sprites=[],
-			xl = x + w * 4,
-			yl = y + w * 3
+			xl = xi + w * 4,
+			yl = y + w * 3,
+			x
 		;
-			for (; x<xl; x+=w)
-				for (; y<yl; y+=w)
+			for (; y<yl; y+=w)
+				for (x=xi; x<xl; x+=w)
 					sprites.push(this.spritesheet.slice(x,y,w,w));
 
 			COLORS.push(sprites);
@@ -344,25 +353,38 @@ var
 			SPRITE_MASK = this.spritesheet.slice(206,368,46,46);
 		},
 
-		start: function()
-		{
-			this.board = new Board();
-			this.stage.add(this.board);
-		},
-
-		startFn: function()
+		initMice: function()
 		{
 		var
 			mouse = this.mouse = mice(this.stage.canvas)
 		;
+
+			mouse.buttonY = this.onMouseMove.bind(this);
+			mouse.buttonA = mouse.buttonB = mouse.buttonX = this.onClick.bind(this);
+		},
+
+		start: function()
+		{
+			this.background.add(j5g3.image(assets.background).stretch(this.stage.width, this.stage.height));
+			this.board = new Board();
+
+			this.stage.add([ this.background, this.board ]);
+		},
+
+		startFn: function()
+		{
 			TW = this.stage.width / COLS;
 			TH = this.stage.height / ROWS;
 			GRAVITY = TH / 4;
 
-			mouse.buttonY = this.onMouseMove.bind(this);
-			mouse.buttonA = mouse.buttonB = mouse.buttonX = this.onClick.bind(this);
+			this.background = this.stage;
+			this.background.draw = j5g3.Draw.RootDirty;
+
+			this.stage = new j5g3.Stage();
+			this.stage.add(this.background);
 
 			this.initSpritesheet();
+			this.initMice();
 			this.fps(32);
 
 			this.run();
