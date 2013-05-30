@@ -1,4 +1,5 @@
-(function(j5g3) {
+(function(j5g3, mice) {
+"use strict";
 var
 	ROWS = 15,
 	COLS = 16,
@@ -277,7 +278,7 @@ var
 
 		reset: function()
 		{
-			for (i=0; i<this.selected.length; i++)
+			for (var i=0; i<this.selected.length; i++)
 				this.selected[i].deselect();
 
 			this.selected = [];
@@ -397,4 +398,4 @@ var
 		game.start();
 	});
 
-})(this.j5g3);
+})(this.j5g3, this.mice);
