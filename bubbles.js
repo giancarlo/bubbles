@@ -8,13 +8,21 @@ var
 	TH,
 	GRAVITY,
 
+	loader = j5g3.loader(),
+
+	assets = {
+		bubble_fx: loader.audio('bubble.ogg'),
+		pop: loader.audio('bubble2.ogg')
+	},
+
 	Explosion = j5g3.Clip.extend({
 
 		count: 10,
-		radius: 20,
+		radius: 30,
 		duration: 10,
 
 		stroke: '#eee',
+		fill: 'transparent',
 
 		setup: function()
 		{
@@ -30,9 +38,9 @@ var
 		;
 			for (i=0; i<this.count; i++)
 			{
-				dot = j5g3.dot(5);
-				dot.stroke = '#eee';
+				dot = j5g3.circle({ radius: 5 });
 				rnd = j5g3.rand(this.radius);
+
 				this.add([ dot, j5g3.tween({
 					target: dot,
 					duration: this.duration,
@@ -47,6 +55,11 @@ var
 
 				angle += inc;
 			}
+		},
+
+		paint: function(context)
+		{
+			j5g3.Clip.prototype.paint.apply(this, [context]);
 		}
 
 	}),
@@ -86,6 +99,7 @@ var
 	Board = j5g3.Clip.extend({
 
 		selected: null,
+		popDelay: 40,
 
 		compare: function(s, x, y)
 		{
@@ -97,6 +111,9 @@ var
 			sprite = this.map[y][x];
 
 			if (!sprite)
+				return;
+
+			if (sprite.gravityX || sprite.gravityY)
 				return;
 
 			if (this.selected.indexOf(sprite) !== -1)
@@ -126,6 +143,7 @@ var
 				this.do_select(x-1, y);
 
 			this.points.text = this.getPoints(this.selected.length);
+			assets.bubble_fx.play();
 		},
 
 		popBubble: function(bubble)
@@ -135,7 +153,7 @@ var
 			row, b
 		;
 			bubble.remove();
-			this.add(new Explosion({ x: bubble.x, y: bubble.y }));
+			this.add(new Explosion({ x: bubble.x, y: bubble.y, stroke: bubble.fill }));
 
 			for (row = bubble.boardY; row>0; row--)
 			{
@@ -146,8 +164,17 @@ var
 				}
 				this.map[row][col] = this.map[row-1][col];
 			}
-
 			this.map[0][col] = null;
+			this.playPop();
+		},
+
+		playPop: function()
+		{
+			var s = document.createElement('AUDIO');
+			s.src = assets.pop.src;
+			setTimeout(function() {
+				s.play();
+			}, this._popd += this.popDelay);
 		},
 
 		getPoints: function(n)
@@ -192,6 +219,7 @@ var
 		{
 			if (this.selected.length > 1)
 			{
+				this._popd = 0;
 				this.selected.forEach(this.popBubble.bind(this));
 				this.score.text = parseInt(this.score.text, 10) + this.getPoints(this.selected.length);
 				this.checkColumns();
@@ -271,7 +299,7 @@ var
 
 	})
 ;
-	j5g3.ready(function() {
+	loader.ready(function() {
 		game = new Game();
 	});
 
