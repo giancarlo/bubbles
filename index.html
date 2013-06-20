@@ -2,7 +2,11 @@
 
 <style>
 	body { width: 640px; margin: 20px auto; background: #000 };
-	canvas { position: absolute; top: 0;}
+	canvas {
+		position: absolute; top: 0; user-select: none;
+		-moz-user-select: none;
+		-webkit-user-select: none;
+	}
 </style>
 
 <script src="bubbles.compiled.js"></script>
