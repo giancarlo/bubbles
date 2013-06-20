@@ -270,7 +270,6 @@ var
 				this._popd = 0;
 				this.selected.forEach(this.popBubble.bind(this));
 				this.score.text = parseInt(this.score.text, 10) + this.getPoints(this.selected.length);
-				this.score.center();
 				this.score.invalidate();
 				this.checkColumns();
 				this.selected = [];
