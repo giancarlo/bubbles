@@ -1,4 +1,4 @@
-(function(j5g3, mice) {
+(function(j5g3) {
 "use strict";
 var
 	ROWS = 15,
@@ -366,7 +366,7 @@ var
 		initMice: function()
 		{
 		var
-			mouse = this.mouse = mice(this.stage.canvas)
+			mouse = this.mouse = j5g3.in(this.stage.canvas)
 		;
 
 			mouse.buttonY = this.onMouseMove.bind(this);
@@ -395,7 +395,7 @@ var
 
 			this.initSpritesheet();
 			this.initMice();
-			this.fps(32);
+			this.fps = 32;
 
 			this.run();
 		}
@@ -407,4 +407,4 @@ var
 		game.start();
 	});
 
-})(this.j5g3, this.mice);
+})(this.j5g3);
