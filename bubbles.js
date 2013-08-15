@@ -389,9 +389,6 @@ var
 
 			this.background = this.stage.layer({ background: true });
 
-			this.stage = new j5g3.Stage();
-			this.stage.add(this.background);
-
 			this.initSpritesheet();
 			this.initMice();
 			this.fps = 32;
