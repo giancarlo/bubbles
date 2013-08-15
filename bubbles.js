@@ -387,8 +387,7 @@ var
 			TH = this.stage.height / ROWS;
 			GRAVITY = TH / 4;
 
-			this.background = this.stage;
-			this.background.draw = j5g3.Draw.RootDirty;
+			this.background = this.stage.layer({ background: true });
 
 			this.stage = new j5g3.Stage();
 			this.stage.add(this.background);
